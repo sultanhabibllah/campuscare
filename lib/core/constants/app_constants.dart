@@ -1,20 +1,38 @@
+
 class AppConstants {
   AppConstants._();
 
-  // Replace this at run-time: flutter run --dart-define=ALU_EMAIL_DOMAIN=your-real-domain
-  static const aluEmailDomain = String.fromEnvironment(
-    'ALU_EMAIL_DOMAIN',
-    defaultValue: 'alu.edu',
-  );
+  // Official ALU student email domain
+  static const String aluEmailDomain = 'alustudent.com';
 
-  static bool validCampusEmail(String email) =>
-      email.trim().toLowerCase().endsWith('@${aluEmailDomain.toLowerCase()}');
+  // Validate ALU student email addresses
+  static bool validCampusEmail(String email) {
+    final normalizedEmail = email.trim().toLowerCase();
 
-  static const categories = <String>[
-    'Facilities', 'Water', 'Electricity', 'Sanitation', 'Safety', 'Other'
+    return normalizedEmail.endsWith(
+      '@$aluEmailDomain',
+    );
+  }
+
+  // Incident categories
+  static const List<String> categories = [
+    'Facilities',
+    'Water',
+    'Electricity',
+    'Sanitation',
+    'Safety',
+    'Other',
   ];
-  static const locations = <String>[
-    'Classrooms', 'Library', 'Cafeteria', 'Student Residence',
-    'Computer Lab', 'Reception', 'Outdoor Area', 'Other'
+
+  // Campus locations
+  static const List<String> locations = [
+    'Classrooms',
+    'Library',
+    'Cafeteria',
+    'Student Residence',
+    'Computer Lab',
+    'Reception',
+    'Outdoor Area',
+    'Other',
   ];
 }

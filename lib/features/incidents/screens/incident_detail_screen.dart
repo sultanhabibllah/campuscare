@@ -18,12 +18,16 @@ class IncidentDetailScreen extends StatelessWidget {
     final repo = context.read<IncidentRepository>();
     return Scaffold(appBar: AppBar(title: const Text('Incident details')),
       body: StreamBuilder<Incident?>(stream: repo.watchOne(id), builder: (context, snap) {
-        if (snap.hasError) return EmptyPanel(icon: Icons.error_outline,
+        if (snap.hasError) {
+          return EmptyPanel(icon: Icons.error_outline,
           title: 'Unable to open report', detail: '${snap.error}');
+        }
         if (snap.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
         final item = snap.data;
-        if (item == null) return const EmptyPanel(icon: Icons.search_off,
+        if (item == null) {
+          return const EmptyPanel(icon: Icons.search_off,
           title: 'Report not found', detail: 'It may have been deleted.');
+        }
         final auth = context.watch<AuthCubit>().state;
         final isOwner = auth.user?.uid == item.reporterId;
         final canEdit = isOwner && item.status == 'Submitted';

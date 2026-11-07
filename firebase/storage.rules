@@ -1,19 +1,74 @@
+
 rules_version = '2';
+
 service firebase.storage {
   match /b/{bucket}/o {
-    function member() {
-      return request.auth != null
-        && request.auth.token.email_verified == true
-        // IMPORTANT: Change this to the actual ALU domain.
-        && request.auth.token.email.matches('.*@alu\\.edu$');
+
+    // --------------------------------------------------
+    // Authentication helpers
+    // --------------------------------------------------
+
+    function signedIn() {
+      return request.auth != null;
     }
+
+    function verified() {
+      return signedIn()
+        && request.auth.token.email_verified == true;
+    }
+
+    function aluStudent() {
+      return signedIn()
+        && request.auth.token.email is string
+        && request.auth.token.email.matches(
+          '.*@alustudent\\.com$'
+        );
+    }
+
+    function staff() {
+      return verified()
+        && request.auth.token.staff == true;
+    }
+
+    function member() {
+      return verified()
+        && (
+          aluStudent()
+          || staff()
+        );
+    }
+
+    // --------------------------------------------------
+    // Incident photographs
+    // --------------------------------------------------
+
     match /incident_photos/{uid}/{filename} {
+
+      // Verified campus members can view photographs.
       allow read: if member();
-      allow create: if member() && request.auth.uid == uid
-        && request.resource.size < 5 * 1024 * 1024
-        && request.resource.contentType.matches('image/.*');
+
+      // Students can upload their own photographs.
+      allow create: if member()
+        && aluStudent()
+
+        && request.auth.uid == uid
+
+        && request.resource.size
+          < 5 * 1024 * 1024
+
+        && request.resource.contentType.matches(
+          'image/.*'
+        );
+
+      // Prevent overwriting existing photographs.
       allow update: if false;
-      allow delete: if member() && (request.auth.uid == uid || request.auth.token.staff == true);
+
+      // Photo owners and authorized staff may delete.
+      allow delete: if member()
+        && (
+          request.auth.uid == uid
+          || staff()
+        );
     }
   }
 }
