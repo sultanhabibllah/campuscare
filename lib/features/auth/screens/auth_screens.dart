@@ -7,9 +7,9 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_widgets.dart';
 import '../cubit/auth_cubit.dart';
 
-// ============================================================
-// LOGIN
-// ============================================================
+// =====================================================
+// LOGIN SCREEN
+// =====================================================
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -48,6 +48,8 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
+          keyboardDismissBehavior:
+              ScrollViewKeyboardDismissBehavior.onDrag,
           child: Column(
             children: [
               const CampusPhotoHeader(),
@@ -63,9 +65,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       Text(
                         'Welcome back',
-                        textAlign: TextAlign.center,
                         style: Theme.of(context)
                             .textTheme.headlineLarge,
+                        textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 8),
                       const Text(
@@ -78,28 +80,35 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       const SizedBox(height: 35),
-                      const FormFieldLabel('ALU Email'),
+                      const FormFieldLabel('Email address'),
                       TextFormField(
                         controller: email,
                         keyboardType:
                             TextInputType.emailAddress,
                         textInputAction:
                             TextInputAction.next,
+                        autofillHints: const [
+                          AutofillHints.email,
+                        ],
                         decoration: const InputDecoration(
-                          hintText: 'name@alustudent.com',
+                          hintText: 'Enter your email',
                           prefixIcon:
                               Icon(Icons.mail_outline),
                         ),
                         validator: (value) {
-                          if (value == null ||
-                              value.trim().isEmpty) {
+                          final text =
+                              value?.trim() ?? '';
+
+                          if (text.isEmpty) {
                             return 'Email is required';
                           }
-                          if (!AppConstants.validCampusEmail(
-                            value,
-                          )) {
-                            return 'Use an @alustudent.com email';
+
+                          if (!RegExp(
+                            r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
+                          ).hasMatch(text)) {
+                            return 'Enter a valid email address';
                           }
+
                           return null;
                         },
                       ),
@@ -177,15 +186,16 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-// ============================================================
-// SIGN UP
-// ============================================================
+// =====================================================
+// SIGN UP SCREEN
+// =====================================================
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
 
   @override
-  State<SignupScreen> createState() => _SignupScreenState();
+  State<SignupScreen> createState() =>
+      _SignupScreenState();
 }
 
 class _SignupScreenState extends State<SignupScreen> {
@@ -244,7 +254,6 @@ class _SignupScreenState extends State<SignupScreen> {
           child: Column(
             children: [
               const CampusPhotoHeader(),
-
               Padding(
                 padding: const EdgeInsets.fromLTRB(
                   24, 0, 24, 32,
@@ -255,7 +264,6 @@ class _SignupScreenState extends State<SignupScreen> {
                     crossAxisAlignment:
                         CrossAxisAlignment.stretch,
                     children: [
-                      // Visible back navigation
                       Align(
                         alignment: Alignment.centerLeft,
                         child: IconButton(
@@ -265,21 +273,17 @@ class _SignupScreenState extends State<SignupScreen> {
                           icon: const Icon(
                             Icons.arrow_back_rounded,
                             color: AppTheme.ink,
-                            size: 26,
                           ),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
+                          onPressed: () =>
+                              Navigator.pop(context),
                         ),
                       ),
-
                       const SizedBox(height: 4),
-
                       Text(
                         'Create an account',
-                        textAlign: TextAlign.center,
                         style: Theme.of(context)
                             .textTheme.headlineLarge,
+                        textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 8),
                       const Text(
@@ -349,13 +353,10 @@ class _SignupScreenState extends State<SignupScreen> {
 
                       const SizedBox(height: 18),
                       const FormFieldLabel('ALU Email'),
-
                       TextFormField(
                         controller: email,
                         keyboardType:
                             TextInputType.emailAddress,
-                        textInputAction:
-                            TextInputAction.next,
                         decoration: const InputDecoration(
                           hintText: 'name@alustudent.com',
                           prefixIcon:
@@ -377,7 +378,6 @@ class _SignupScreenState extends State<SignupScreen> {
 
                       const SizedBox(height: 18),
                       const FormFieldLabel('Password'),
-
                       PasswordInput(
                         controller: password,
                         hint: 'Create a password',
@@ -386,12 +386,8 @@ class _SignupScreenState extends State<SignupScreen> {
                                 ? null
                                 : 'Use at least 8 characters',
                       ),
-
                       const SizedBox(height: 18),
-                      const FormFieldLabel(
-                        'Confirm password',
-                      ),
-
+                      const FormFieldLabel('Confirm password'),
                       PasswordInput(
                         controller: confirm,
                         hint: 'Confirm your password',
@@ -407,7 +403,6 @@ class _SignupScreenState extends State<SignupScreen> {
                       ),
 
                       const SizedBox(height: 30),
-
                       BlocBuilder<AuthCubit, AuthState>(
                         builder: (context, state) {
                           return FilledButton(
@@ -422,9 +417,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           );
                         },
                       ),
-
                       const SizedBox(height: 24),
-
                       Row(
                         mainAxisAlignment:
                             MainAxisAlignment.center,
@@ -451,9 +444,9 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 }
 
-// ============================================================
+// =====================================================
 // EMAIL VERIFICATION
-// ============================================================
+// =====================================================
 
 class VerifyEmailScreen extends StatelessWidget {
   const VerifyEmailScreen({super.key});
@@ -463,7 +456,7 @@ class VerifyEmailScreen extends StatelessWidget {
     final email = context
             .read<AuthCubit>()
             .state.user?.email ??
-        'your ALU email';
+        'your email';
 
     return Scaffold(
       body: SafeArea(
@@ -480,15 +473,16 @@ class VerifyEmailScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 22),
                 Text(
-                  'Verify your ALU email',
+                  'Verify your email',
                   style: Theme.of(context)
                       .textTheme.headlineMedium,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'We sent a verification link to $email. '
-                  'Open it and return here to continue.',
+                  'We sent a verification link to '
+                  '$email. Open it and return here '
+                  'to continue.',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     color: AppTheme.muted,
@@ -547,9 +541,9 @@ class VerifyEmailScreen extends StatelessWidget {
   }
 }
 
-// ============================================================
+// =====================================================
 // PASSWORD RESET
-// ============================================================
+// =====================================================
 
 class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({super.key});
@@ -588,7 +582,7 @@ class _ResetPasswordScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'If the email is registered, '
+            'If this email is registered, '
             'a reset link will arrive shortly.',
           ),
         ),
@@ -632,7 +626,7 @@ class _ResetPasswordScreenState
                 ),
                 const SizedBox(height: 12),
                 const Text(
-                  'Enter your ALU student email to '
+                  'Enter your registered email to '
                   'receive a password reset link.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
@@ -640,22 +634,25 @@ class _ResetPasswordScreenState
                   ),
                 ),
                 const SizedBox(height: 32),
-                const FormFieldLabel('ALU Email'),
+                const FormFieldLabel('Email address'),
                 TextFormField(
                   controller: email,
                   keyboardType:
                       TextInputType.emailAddress,
                   decoration: const InputDecoration(
-                    hintText: 'name@alustudent.com',
+                    hintText: 'Enter your email',
                     prefixIcon:
                         Icon(Icons.mail_outline),
                   ),
-                  validator: (value) =>
-                      AppConstants.validCampusEmail(
-                        value ?? '',
-                      )
-                          ? null
-                          : 'Enter a valid ALU student email',
+                  validator: (value) {
+                    final text = value?.trim() ?? '';
+                    if (!RegExp(
+                      r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
+                    ).hasMatch(text)) {
+                      return 'Enter a valid email address';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 24),
                 FilledButton(
