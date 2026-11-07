@@ -11,3 +11,5 @@ coverage/
 .DS_Store
 firebase-service-account*.json
 serviceAccountKey.json
+*.jks
+*.keystore
