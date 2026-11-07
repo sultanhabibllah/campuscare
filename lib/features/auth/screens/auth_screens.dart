@@ -8,7 +8,7 @@ import '../../../core/widgets/app_widgets.dart';
 import '../cubit/auth_cubit.dart';
 
 // ============================================================
-// LOGIN SCREEN
+// LOGIN
 // ============================================================
 
 class LoginScreen extends StatefulWidget {
@@ -20,7 +20,6 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final form = GlobalKey<FormState>();
-
   final email = TextEditingController();
   final password = TextEditingController();
 
@@ -31,6 +30,19 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  Future<void> login() async {
+    if (!form.currentState!.validate()) return;
+
+    try {
+      await context.read<AuthCubit>().login(
+        email.text.trim(),
+        password.text,
+      );
+    } catch (error) {
+      if (mounted) showAppError(context, error);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,13 +51,9 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             children: [
               const CampusPhotoHeader(),
-
               Padding(
                 padding: const EdgeInsets.fromLTRB(
-                  24,
-                  0,
-                  24,
-                  35,
+                  24, 0, 24, 35,
                 ),
                 child: Form(
                   key: form,
@@ -55,14 +63,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       Text(
                         'Welcome back',
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineLarge,
                         textAlign: TextAlign.center,
+                        style: Theme.of(context)
+                            .textTheme.headlineLarge,
                       ),
-
                       const SizedBox(height: 8),
-
                       const Text(
                         'Log in to report campus issues '
                         'and track their resolution.',
@@ -72,70 +77,52 @@ class _LoginScreenState extends State<LoginScreen> {
                           fontSize: 16,
                         ),
                       ),
-
                       const SizedBox(height: 35),
-
                       const FormFieldLabel('ALU Email'),
-
                       TextFormField(
                         controller: email,
                         keyboardType:
                             TextInputType.emailAddress,
-                        textInputAction: TextInputAction.next,
-                        autofillHints: const [
-                          AutofillHints.email,
-                        ],
+                        textInputAction:
+                            TextInputAction.next,
                         decoration: const InputDecoration(
                           hintText: 'name@alustudent.com',
-                          prefixIcon: Icon(
-                            Icons.mail_outline,
-                          ),
+                          prefixIcon:
+                              Icon(Icons.mail_outline),
                         ),
                         validator: (value) {
                           if (value == null ||
                               value.trim().isEmpty) {
                             return 'Email is required';
                           }
-
                           if (!AppConstants.validCampusEmail(
                             value,
                           )) {
-                            return 'Use your ALU student email';
+                            return 'Use an @alustudent.com email';
                           }
-
                           return null;
                         },
                       ),
-
                       const SizedBox(height: 20),
-
                       const FormFieldLabel('Password'),
-
                       PasswordInput(
                         controller: password,
                         hint: 'Enter your password',
-                        validator: (value) {
-                          if (value == null ||
-                              value.isEmpty) {
-                            return 'Password is required';
-                          }
-
-                          return null;
-                        },
+                        validator: (value) =>
+                            (value?.isNotEmpty ?? false)
+                                ? null
+                                : 'Password is required',
                       ),
-
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    const ResetPasswordScreen(),
-                              ),
-                            );
-                          },
+                          onPressed: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  const ResetPasswordScreen(),
+                            ),
+                          ),
                           child: const Text(
                             'Forgot password?',
                             style: TextStyle(
@@ -144,36 +131,12 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                       ),
-
                       const SizedBox(height: 18),
-
                       BlocBuilder<AuthCubit, AuthState>(
                         builder: (context, state) {
                           return FilledButton(
-                            onPressed: state.busy
-                                ? null
-                                : () async {
-                                    if (!form.currentState!
-                                        .validate()) {
-                                      return;
-                                    }
-
-                                    try {
-                                      await context
-                                          .read<AuthCubit>()
-                                          .login(
-                                            email.text.trim(),
-                                            password.text,
-                                          );
-                                    } catch (error) {
-                                      if (context.mounted) {
-                                        showAppError(
-                                          context,
-                                          error,
-                                        );
-                                      }
-                                    }
-                                  },
+                            onPressed:
+                                state.busy ? null : login,
                             child: state.busy
                                 ? const CircularProgressIndicator(
                                     color: Colors.white,
@@ -182,9 +145,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           );
                         },
                       ),
-
                       const SizedBox(height: 30),
-
                       Row(
                         mainAxisAlignment:
                             MainAxisAlignment.center,
@@ -193,15 +154,13 @@ class _LoginScreenState extends State<LoginScreen> {
                             "Don't have an account? ",
                           ),
                           TextButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      const SignupScreen(),
-                                ),
-                              );
-                            },
+                            onPressed: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    const SignupScreen(),
+                              ),
+                            ),
                             child: const Text('Sign up'),
                           ),
                         ],
@@ -219,7 +178,7 @@ class _LoginScreenState extends State<LoginScreen> {
 }
 
 // ============================================================
-// SIGN UP SCREEN
+// SIGN UP
 // ============================================================
 
 class SignupScreen extends StatefulWidget {
@@ -248,18 +207,14 @@ class _SignupScreenState extends State<SignupScreen> {
     super.dispose();
   }
 
-  String? requiredName(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Required';
-    }
-
-    return null;
+  String? validateName(String? value) {
+    return (value?.trim().isNotEmpty ?? false)
+        ? null
+        : 'Required';
   }
 
   Future<void> createAccount() async {
-    if (!form.currentState!.validate()) {
-      return;
-    }
+    if (!form.currentState!.validate()) return;
 
     try {
       await context.read<AuthCubit>().register(
@@ -275,9 +230,7 @@ class _SignupScreenState extends State<SignupScreen> {
         (route) => route.isFirst,
       );
     } catch (error) {
-      if (mounted) {
-        showAppError(context, error);
-      }
+      if (mounted) showAppError(context, error);
     }
   }
 
@@ -286,16 +239,15 @@ class _SignupScreenState extends State<SignupScreen> {
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
+          keyboardDismissBehavior:
+              ScrollViewKeyboardDismissBehavior.onDrag,
           child: Column(
             children: [
               const CampusPhotoHeader(),
 
               Padding(
                 padding: const EdgeInsets.fromLTRB(
-                  24,
-                  0,
-                  24,
-                  32,
+                  24, 0, 24, 32,
                 ),
                 child: Form(
                   key: form,
@@ -303,29 +255,44 @@ class _SignupScreenState extends State<SignupScreen> {
                     crossAxisAlignment:
                         CrossAxisAlignment.stretch,
                     children: [
-                      Text(
-                        'Create an account',
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineLarge,
-                        textAlign: TextAlign.center,
+                      // Visible back navigation
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: IconButton(
+                          tooltip: 'Back to login',
+                          padding: EdgeInsets.zero,
+                          alignment: Alignment.centerLeft,
+                          icon: const Icon(
+                            Icons.arrow_back_rounded,
+                            color: AppTheme.ink,
+                            size: 26,
+                          ),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
                       ),
 
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 4),
 
+                      Text(
+                        'Create an account',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context)
+                            .textTheme.headlineLarge,
+                      ),
+                      const SizedBox(height: 8),
                       const Text(
-                        'Set up your account to report issues '
-                        'and get timely updates.',
+                        'Set up your account to report '
+                        'issues and get timely updates.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: AppTheme.muted,
                           fontSize: 16,
                         ),
                       ),
-
                       const SizedBox(height: 30),
 
-                      // First name and last name
                       Row(
                         children: [
                           Expanded(
@@ -338,7 +305,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                 ),
                                 TextFormField(
                                   controller: first,
-                                  validator: requiredName,
+                                  validator: validateName,
                                   textCapitalization:
                                       TextCapitalization.words,
                                   decoration:
@@ -352,9 +319,7 @@ class _SignupScreenState extends State<SignupScreen> {
                               ],
                             ),
                           ),
-
                           const SizedBox(width: 12),
-
                           Expanded(
                             child: Column(
                               crossAxisAlignment:
@@ -365,7 +330,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                 ),
                                 TextFormField(
                                   controller: last,
-                                  validator: requiredName,
+                                  validator: validateName,
                                   textCapitalization:
                                       TextCapitalization.words,
                                   decoration:
@@ -383,58 +348,46 @@ class _SignupScreenState extends State<SignupScreen> {
                       ),
 
                       const SizedBox(height: 18),
-
                       const FormFieldLabel('ALU Email'),
 
                       TextFormField(
                         controller: email,
                         keyboardType:
                             TextInputType.emailAddress,
-                        textInputAction: TextInputAction.next,
-                        autofillHints: const [
-                          AutofillHints.email,
-                        ],
+                        textInputAction:
+                            TextInputAction.next,
                         decoration: const InputDecoration(
                           hintText: 'name@alustudent.com',
-                          prefixIcon: Icon(
-                            Icons.mail_outline,
-                          ),
+                          prefixIcon:
+                              Icon(Icons.mail_outline),
                         ),
                         validator: (value) {
                           if (value == null ||
                               value.trim().isEmpty) {
                             return 'Email is required';
                           }
-
                           if (!AppConstants.validCampusEmail(
                             value,
                           )) {
                             return 'Use an @alustudent.com email';
                           }
-
                           return null;
                         },
                       ),
 
                       const SizedBox(height: 18),
-
                       const FormFieldLabel('Password'),
 
                       PasswordInput(
                         controller: password,
                         hint: 'Create a password',
-                        validator: (value) {
-                          if (value == null ||
-                              value.length < 8) {
-                            return 'Use at least 8 characters';
-                          }
-
-                          return null;
-                        },
+                        validator: (value) =>
+                            (value?.length ?? 0) >= 8
+                                ? null
+                                : 'Use at least 8 characters',
                       ),
 
                       const SizedBox(height: 18),
-
                       const FormFieldLabel(
                         'Confirm password',
                       ),
@@ -447,12 +400,9 @@ class _SignupScreenState extends State<SignupScreen> {
                               value.isEmpty) {
                             return 'Confirm your password';
                           }
-
-                          if (value != password.text) {
-                            return 'Passwords do not match';
-                          }
-
-                          return null;
+                          return value == password.text
+                              ? null
+                              : 'Passwords do not match';
                         },
                       ),
 
@@ -483,9 +433,8 @@ class _SignupScreenState extends State<SignupScreen> {
                             'Already have an account? ',
                           ),
                           TextButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                            },
+                            onPressed: () =>
+                                Navigator.pop(context),
                             child: const Text('Log in'),
                           ),
                         ],
@@ -503,7 +452,7 @@ class _SignupScreenState extends State<SignupScreen> {
 }
 
 // ============================================================
-// EMAIL VERIFICATION SCREEN
+// EMAIL VERIFICATION
 // ============================================================
 
 class VerifyEmailScreen extends StatelessWidget {
@@ -511,11 +460,9 @@ class VerifyEmailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final userEmail = context
+    final email = context
             .read<AuthCubit>()
-            .state
-            .user
-            ?.email ??
+            .state.user?.email ??
         'your ALU email';
 
     return Scaffold(
@@ -531,52 +478,33 @@ class VerifyEmailScreen extends StatelessWidget {
                   size: 88,
                   color: AppTheme.green,
                 ),
-
                 const SizedBox(height: 22),
-
                 Text(
                   'Verify your ALU email',
                   style: Theme.of(context)
-                      .textTheme
-                      .headlineMedium,
+                      .textTheme.headlineMedium,
                   textAlign: TextAlign.center,
                 ),
-
                 const SizedBox(height: 12),
-
                 Text(
-                  'We sent a verification link to '
-                  '$userEmail.\n\n'
-                  'Open the link in your inbox, '
-                  'then return to CampusCare.',
+                  'We sent a verification link to $email. '
+                  'Open it and return here to continue.',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     color: AppTheme.muted,
-                    fontSize: 15,
                   ),
                 ),
-
                 const SizedBox(height: 32),
-
                 FilledButton(
                   onPressed: () async {
-                    try {
-                      await context
-                          .read<AuthCubit>()
-                          .refresh();
-                    } catch (error) {
-                      if (context.mounted) {
-                        showAppError(context, error);
-                      }
-                    }
+                    await context
+                        .read<AuthCubit>()
+                        .refresh();
                   },
                   child: const Text(
                     "I've verified my email",
                   ),
                 ),
-
-                const SizedBox(height: 12),
-
                 TextButton(
                   onPressed: () async {
                     try {
@@ -605,13 +533,9 @@ class VerifyEmailScreen extends StatelessWidget {
                     'Resend verification link',
                   ),
                 ),
-
-                const SizedBox(height: 8),
-
                 TextButton(
-                  onPressed: () {
-                    context.read<AuthCubit>().logout();
-                  },
+                  onPressed: () =>
+                      context.read<AuthCubit>().logout(),
                   child: const Text('Log out'),
                 ),
               ],
@@ -624,7 +548,7 @@ class VerifyEmailScreen extends StatelessWidget {
 }
 
 // ============================================================
-// PASSWORD RESET SCREEN
+// PASSWORD RESET
 // ============================================================
 
 class ResetPasswordScreen extends StatefulWidget {
@@ -649,13 +573,9 @@ class _ResetPasswordScreenState
   }
 
   Future<void> sendResetLink() async {
-    if (!form.currentState!.validate()) {
-      return;
-    }
+    if (!form.currentState!.validate()) return;
 
-    setState(() {
-      busy = true;
-    });
+    setState(() => busy = true);
 
     try {
       await context
@@ -668,23 +588,17 @@ class _ResetPasswordScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'If this email is registered, '
-            'a password reset link will arrive shortly.',
+            'If the email is registered, '
+            'a reset link will arrive shortly.',
           ),
         ),
       );
 
       Navigator.pop(context);
     } catch (error) {
-      if (mounted) {
-        showAppError(context, error);
-      }
+      if (mounted) showAppError(context, error);
     } finally {
-      if (mounted) {
-        setState(() {
-          busy = false;
-        });
-      }
+      if (mounted) setState(() => busy = false);
     }
   }
 
@@ -694,7 +608,6 @@ class _ResetPasswordScreenState
       appBar: AppBar(
         title: const Text('Reset password'),
       ),
-
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -705,62 +618,46 @@ class _ResetPasswordScreenState
                   CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 20),
-
                 const Icon(
                   Icons.lock_reset_outlined,
                   size: 72,
                   color: AppTheme.green,
                 ),
-
                 const SizedBox(height: 20),
-
                 Text(
                   'Forgot your password?',
                   style: Theme.of(context)
-                      .textTheme
-                      .headlineMedium,
+                      .textTheme.headlineMedium,
                   textAlign: TextAlign.center,
                 ),
-
                 const SizedBox(height: 12),
-
                 const Text(
-                  'Enter your ALU student email. '
-                  'We will send you a link to reset '
-                  'your password.',
+                  'Enter your ALU student email to '
+                  'receive a password reset link.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: AppTheme.muted,
                   ),
                 ),
-
                 const SizedBox(height: 32),
-
                 const FormFieldLabel('ALU Email'),
-
                 TextFormField(
                   controller: email,
                   keyboardType:
                       TextInputType.emailAddress,
                   decoration: const InputDecoration(
                     hintText: 'name@alustudent.com',
-                    prefixIcon: Icon(
-                      Icons.mail_outline,
-                    ),
+                    prefixIcon:
+                        Icon(Icons.mail_outline),
                   ),
-                  validator: (value) {
-                    if (!AppConstants.validCampusEmail(
-                      value ?? '',
-                    )) {
-                      return 'Enter a valid ALU student email';
-                    }
-
-                    return null;
-                  },
+                  validator: (value) =>
+                      AppConstants.validCampusEmail(
+                        value ?? '',
+                      )
+                          ? null
+                          : 'Enter a valid ALU student email',
                 ),
-
                 const SizedBox(height: 24),
-
                 FilledButton(
                   onPressed: busy ? null : sendResetLink,
                   child: busy
