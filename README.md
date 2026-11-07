@@ -1,112 +1,476 @@
-# CampusCare | Flutter + Firebase
 
-A campus incident reporting app using the agreed green visual design and **the supplied photograph of ALU**. It has two roles, student and authorized campus staff.
+# CampusCare
 
-## Important: How to use this package
+### Campus Incident Reporting Mobile Application
 
-You already created `campus_incident_reporting` using **VS Code → Flutter: New Project**. Keep your Flutter-generated `android/`, `ios/`, `.gitignore`, etc. Copy these supplied `lib/`, `assets/`, `pubspec.yaml`, and `firebase/` files into that project. **Do not replace your whole Flutter project with this ZIP** because this ZIP intentionally contains only the source and setup files, not Flutter's generated platform directories.
+CampusCare is a Flutter mobile application developed to simplify incident reporting and resolution tracking within the African Leadership University (ALU) community.
 
-### 1. Requirements
+The application provides students with a centralized platform to report campus issues, attach photographic evidence, and monitor their resolution. Authorized campus staff can review incidents, update their statuses, and communicate progress through status notes.
 
-- Flutter 3.27+ and Dart 3.6+ (prefer an up-to-date stable Flutter).
-- A Firebase project and an Android app registration, and optionally iOS.
-- A real ALU email domain. `alu.edu` in screenshots is an **example**, not verified as the true allowed domain.
+Built with **Flutter, Dart, Firebase Authentication, Cloud Firestore, Cloudinary, and Cubit**.
 
-### 2. Install dependencies
+> **Project status:** Functional academic prototype developed for the Mobile Application Development coursework at African Leadership University.
 
-From the VS Code **terminal** inside your existing Flutter project:
+---
 
-```powershell
+## Application Preview
+
+### Student Experience
+
+<p align="center">
+  <img src="docs/01_student_login.png" width="210" alt="CampusCare Login"/>
+  <img src="docs/02_student_registration.png" width="210" alt="Student Registration"/>
+  <img src="docs/03_student_dashboard.png" width="210" alt="Student Dashboard"/>
+</p>
+
+<p align="center">
+  <img src="docs/04_incident_submission.png" width="210" alt="Incident Reporting"/>
+  <img src="docs/05_incident_history.png" width="210" alt="Incident History"/>
+  <img src="docs/06_incident_details.png" width="210" alt="Incident Details"/>
+</p>
+
+### Staff Experience
+
+<p align="center">
+  <img src="docs/07_staff_dashboard.png" width="260" alt="Staff Dashboard"/>
+  <img src="docs/08_staff_status_update.png" width="260" alt="Incident Status Management"/>
+</p>
+
+---
+
+## Features
+
+### Student Features
+
+**Authentication and Account Management**
+- Student registration using `@alustudent.com` email addresses.
+- Secure login with Firebase Authentication.
+- Email verification before application access.
+- Password reset and logout functionality.
+- Personalized student dashboard.
+
+**Incident Reporting**
+- Submit incidents with a title, description, category, and location.
+- Select from Facilities, Water, Electricity, Sanitation, Safety, and Other.
+- Attach an optional photograph from the device gallery.
+- Upload photographic evidence to Cloudinary.
+- Store incident information in Cloud Firestore.
+- Receive form validation and submission feedback.
+
+**Incident Tracking**
+- View submitted incidents and their current statuses.
+- Search incident records and filter by status.
+- Access detailed incident information and photographs.
+- Track progress using a three-stage status timeline.
+- View staff updates and explanatory notes.
+- Edit or delete eligible incidents while they remain Submitted.
+
+### Staff Features
+
+**Incident Management**
+- Dedicated staff dashboard.
+- Overview of total, new, active, and resolved incidents.
+- View reported incidents and their details.
+- Update incident statuses.
+- Add notes explaining actions taken.
+- Manage incident progress through Cloud Firestore.
+
+Staff access is controlled through Firebase Authentication custom claims and Firestore Security Rules.
+
+---
+
+## Incident Lifecycle
+
+CampusCare uses three incident statuses:
+
+```text
+Submitted
+    |
+    v
+In Progress
+    |
+    v
+Resolved
+```
+
+1. **Submitted:** The student reports an incident, and it is stored in Firestore.
+2. **In Progress:** Authorized staff acknowledge the issue and begin addressing it.
+3. **Resolved:** Staff mark the issue as resolved.
+
+Students can monitor the status history and view updates from campus staff.
+
+---
+
+## Technology Stack
+
+| Technology | Purpose |
+|---|---|
+| Flutter | Mobile application framework |
+| Dart | Programming language |
+| Firebase Authentication | User authentication and email verification |
+| Cloud Firestore | User profiles, incident records, and status history |
+| Cloudinary | Cloud storage and delivery of incident photographs |
+| Flutter BLoC / Cubit | Application state management |
+| Image Picker | Selecting photographs from the device gallery |
+| HTTP | Cloudinary image upload integration |
+| Git & GitHub | Version control |
+| Android Emulator | Development and functional testing |
+
+### Why Cloudinary?
+
+Firebase Storage's billing requirements created a limitation for the project's free-tier development environment.
+
+Following instructor approval to use an alternative cloud image storage provider, Cloudinary was integrated for photographic evidence.
+
+Firebase Authentication and Cloud Firestore remain the application's authentication and database services.
+
+---
+
+## Application Architecture
+
+CampusCare follows a **feature-based architecture** that separates presentation, state management, and data access.
+
+```text
+lib/
+├── core/
+│   ├── constants/
+│   ├── theme/
+│   └── widgets/
+│
+├── data/
+│   ├── models/
+│   └── repositories/
+│
+├── features/
+│   ├── auth/
+│   │   ├── cubit/
+│   │   └── screens/
+│   ├── home/
+│   │   └── screens/
+│   ├── incidents/
+│   │   ├── cubit/
+│   │   ├── screens/
+│   │   └── widgets/
+│   ├── staff/
+│   │   └── screens/
+│   └── profile/
+│       └── screens/
+│
+├── shell/
+├── firebase_options.dart
+└── main.dart
+```
+
+### Architectural Layers
+
+**Presentation Layer**
+
+Flutter screens and reusable widgets are responsible for rendering the interface and handling user interactions.
+
+**State Management Layer**
+
+Cubits coordinate authentication states, incident data, loading indicators, errors, and UI updates.
+
+**Data Layer**
+
+Repositories encapsulate communication with Firebase Authentication, Cloud Firestore, and Cloudinary.
+
+**Backend Services**
+
+Firebase Authentication manages identity, Firestore manages persistent application data, and Cloudinary hosts photographic evidence.
+
+This separation improves readability, maintainability, and component reuse.
+
+---
+
+## Database Structure
+
+Cloud Firestore stores information in two main collections.
+
+### Users
+
+```text
+users/
+    {uid}/
+        firstName
+        lastName
+        email
+        createdAt
+```
+
+### Incidents
+
+```text
+incidents/
+    {incidentId}/
+        reporterId
+        reporterName
+        title
+        description
+        category
+        location
+        photoUrl
+        status
+        createdAt
+        updatedAt
+        statusHistory
+```
+
+Incident documents contain information submitted by students, while status history records staff updates.
+
+The application subscribes to Firestore data streams so that relevant incident changes are reflected in the interface.
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+Before running CampusCare, ensure that you have:
+
+- Flutter SDK installed and configured.
+- Dart SDK (included with Flutter).
+- Android Studio or a supported Android emulator.
+- Visual Studio Code or Android Studio.
+- A Firebase project.
+- A Cloudinary account.
+- FlutterFire CLI configured.
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/sultanhabibllah/campuscare.git
+
+cd campuscare
+```
+
+### 2. Install Dependencies
+
+```bash
 flutter pub get
 ```
 
-### 3. Configure Firebase (mandatory)
+### 3. Configure Firebase
 
-Set up a Firebase project in https://console.firebase.google.com, enable Email/Password authentication, create a Cloud Firestore database, and provision Cloud Storage. Storage might require Firebase billing for a new project. Install the FlutterFire CLI if necessary:
+Create a Firebase project using the Firebase Console.
 
-```powershell
+Enable:
+
+- Firebase Authentication with Email/Password.
+- Cloud Firestore.
+
+Install the Firebase CLI and FlutterFire CLI if they are not already available.
+
+```bash
 dart pub global activate flutterfire_cli
-flutterfire configure
 ```
 
-Follow the CLI prompts to select your Firebase project and Android package name. This generates **`lib/firebase_options.dart`**, which cannot be provided generically because it belongs to *your* Firebase project. Never paste service-account keys into Flutter client code.
+Configure the application:
 
-Enable Firebase **Authentication → Sign-in method → Email/Password**. In Firebase Console, verify that authorized domains and email templates are configured. Email verification link is triggered after registration.
-
-### 4. Apply security rules
-
-Use `firebase/firestore.rules` for Cloud Firestore and `firebase/storage.rules` for Firebase Storage. You can paste them into the Rules pages in Firebase Console, or deploy with Firebase CLI after configuring your Firebase project.
-
-**Replace every `alu.edu` occurrence in BOTH rule files with the actual domain.** Then run the app with the same domain:
-
-```powershell
-flutter run --dart-define=ALU_EMAIL_DOMAIN=actual-alu-domain.example
+```bash
+dart pub global run flutterfire_cli:flutterfire configure
 ```
 
-Default code and UI placeholders use `alu.edu` *only as an example*. If the ALU email domain is actually different, update UI hints in `auth_screens.dart` as well. Students with other domains must not be able to self-register, and **email verification is mandatory before entering the app**.
+Select your Firebase project and Android platform.
 
-### 5. Give a staff account permission
+This generates or updates:
 
-A new account is **always a student**, even if they edit their own Firestore profile. Staff access is based on a Firebase Auth **custom claim** `staff: true`, issued only with the **Firebase Admin SDK** in a trusted administration environment. Do not place Admin credentials in the app. Example secure one-time administrative code (run separately in your local trusted Node admin environment with correctly configured Admin SDK credentials):
-
-```js
-const admin = require('firebase-admin');
-admin.initializeApp();
-(async () => {
-  const user = await admin.auth().getUserByEmail('AUTHORIZED_STAFF_ALU_EMAIL');
-  await admin.auth().setCustomUserClaims(user.uid, { staff: true });
-  console.log('Granted staff permissions to', user.uid);
-})();
+```text
+lib/firebase_options.dart
 ```
 
-Only assign `staff` after verifying the person is authorized. The staff user must sign out and sign in again (or refresh ID token) to pick up their new claim. In the app, the staff tab set displays a staff dashboard and status management.
+Make sure the Firebase Android application is configured using the package identifier in your project.
 
-### 6. Run on Android
+### 4. Configure Firestore Security Rules
 
-Start the emulator from Android Studio, then use VS Code / `F5` or `flutter run --dart-define=ALU_EMAIL_DOMAIN=...`. This is a native app, not browser-only.
+The project includes Firestore rules in:
 
-You should also configure platform photo-picker permissions per the `image_picker` package guidance for your Flutter/Android/iOS SDK. Gallery picking on current Android typically uses the system picker.
-
-## What is included
-
-- Sign up, login, email verification, resend email, password reset, logout
-- ALU photograph on both authentication screens, shared green theme
-- Home summary and recent own reports
-- Incident report create with category, description, location, optional photo
-- Firestore report create/read/update/delete (editing/deleting allowed only before staff starts working)
-- Search, status filters, report details and timeline
-- Staff dashboard and staff-only status updates, enforced by Firestore security rules
-- Profile and basic account status
-- Cubit-based auth and real-time report state; shared widgets and repository layer
-
-## Current UX assumptions and limits
-
-- Reports are readable by verified ALU members to support campus-wide browsing. The student Reports screen currently shows **only reports by the signed-in student**. Adjust the query/UI if a separate community feed is desired.
-- Statuses: Submitted → In Progress → Resolved (staff can select any different status in this code).
-- There is no push notification service. Updates are live in Firestore and immediately appear when viewing reports; notification banners and a notifications inbox are not included.
-- Photos use Firebase Storage download URLs. Rules restrict reading the storage object, but **download tokens in URLs are bearer capabilities** and can be shared. Avoid sensitive photos in an educational demo.
-- The upload happens before Firestore document creation; rare interrupted requests can leave an orphaned image. A production app would use retry or server cleanup.
-- UI mockups are **references**, not app screenshots. Use emulator screenshots in your report.
-- Google Sign-In, Apple Sign-In, and terms/privacy links are intentionally not included, by design decision.
-- This source was prepared without a Flutter SDK in the current execution environment; it **has not been compiled or emulator-tested**. Run `flutter analyze`, then `flutter run` in VS Code and share any diagnostics for fixes.
-
-## Development checks
-
-```powershell
-flutter pub get
-flutter analyze
-flutter run --dart-define=ALU_EMAIL_DOMAIN=actual-alu-domain.example
+```text
+firebase/firestore.rules
 ```
 
-## Rubric submission checklist
+Review the rules before deployment and publish them to the project's Firestore database.
 
-- GitHub repository URL
-- Working Flutter Android/iOS emulator demo
-- 7–10 minute recorded app demonstration including student and staff accounts, Firebase Auth/Firestore Console views
-- PDF technical report with architecture, state management, Firestore schema, authorization/security rules, UI/UX, screenshots, testing, challenges, lessons, and APA/IEEE citations
+The rules implement restrictions for authenticated students and authorized staff, including incident ownership and staff-only status management.
 
-**Suggested Firestore schema**
+For a production deployment, further restrict incident read access according to privacy requirements.
 
-`users/{uid}`: `firstName`, `lastName`, `email`, `createdAt`.
+### 5. Configure Cloudinary
 
-`incidents/{incidentId}`: `reporterId`, `reporterName`, `title`, `description`, `category`, `location`, `photoUrl`, `photoPath`, `status`, `createdAt`, `updatedAt`, `statusHistory: [{status, by, at, note}]`.
+Create a Cloudinary account and configure an **unsigned image upload preset**.
+
+The project uses a Cloudinary configuration file:
+
+```text
+lib/core/constants/cloudinary_config.dart
+```
+
+Configure it with your own Cloudinary cloud name and unsigned preset name.
+
+Example:
+
+```dart
+class CloudinaryConfig {
+  static const String cloudName = 'YOUR_CLOUD_NAME';
+  static const String uploadPreset = 'YOUR_UNSIGNED_PRESET';
+}
+```
+
+Keep the existing class and constant names expected by the application if they differ from this example.
+
+Cloudinary's upload endpoint follows this format:
+
+```text
+https://api.cloudinary.com/v1_1/YOUR_CLOUD_NAME/image/upload
+```
+
+The application sends an image using a multipart HTTP request and stores the returned `secure_url` in Firestore.
+
+**Security note:** Unsigned upload presets are suitable for demonstrating the coursework workflow, but a production implementation should use authenticated uploads through a trusted backend.
+
+Never place Cloudinary API secrets or Firebase Admin SDK private keys in the Flutter application.
+
+### 6. Run the Application
+
+Start an Android emulator and verify that Flutter detects it:
+
+```bash
+flutter devices
+```
+
+Launch CampusCare:
+
+```bash
+flutter run
+```
+
+You can also run the project directly through Visual Studio Code's Flutter debugging tools.
+
+---
+
+## Staff Account Configuration
+
+Staff privileges are managed using Firebase Authentication custom claims.
+
+A trusted administrator assigns:
+
+```json
+{
+  "staff": true
+}
+```
+
+to the authorized staff account using the Firebase Admin SDK.
+
+The Flutter application reads this claim to determine which interface to display.
+
+Firestore Security Rules must independently enforce staff-only permissions.
+
+**Important:** Administrative scripts and Firebase service account keys must be stored outside the public repository. Never distribute private credentials or allow users to grant themselves staff privileges.
+
+---
+
+## Security Considerations
+
+CampusCare includes:
+
+- Firebase-managed authentication.
+- Student email-domain validation.
+- Email verification.
+- Firebase custom claims for staff roles.
+- Firestore Security Rules.
+- Validation of incident submission fields.
+- HTTPS communication with cloud services.
+
+### Current Limitations
+
+This is an academic prototype, not a production deployment.
+
+- Incident read permissions should be narrowed for sensitive reports.
+- Cloudinary's unsigned upload preset is not tied directly to Firebase identity.
+- Secure cloud-image deletion is not fully implemented.
+- Additional automated security-rule testing is recommended.
+- Testing has primarily been conducted on an Android emulator.
+
+These limitations and potential improvements are discussed in the technical report.
+
+---
+
+## Testing
+
+CampusCare was developed and tested using Flutter, VS Code, and an Android emulator.
+
+Testing and demonstration activities covered:
+
+- Authentication and student registration.
+- Form validation and navigation.
+- Student dashboard and incident lists.
+- Incident submission and Firestore persistence.
+- Selecting photographs from the Android gallery.
+- Cloudinary uploads.
+- Search and status filtering.
+- Incident details and timeline.
+- Authorized staff dashboard access.
+- Staff status updates.
+
+Additional testing is recommended for production security, physical devices, multiple screen sizes, and automated widget/integration coverage.
+
+---
+
+## Cloud Integration Evidence
+
+The following screenshots document the application's cloud service integrations.
+
+### Firebase Authentication
+
+![Firebase Authentication](docs/09_firebase_authentication.png)
+
+### Cloudinary Image Upload
+
+![Cloudinary Incident Storage](docs/10_cloudinary_image_storage.png)
+
+### Cloud Firestore
+
+![Firestore Incident Document](docs/11_firestore_incident_document.png)
+
+---
+
+## Project Documentation
+
+### Technical Report
+
+The technical report covers the system architecture, application features, database design, state management, authentication, security, UI/UX decisions, testing, development challenges, and future improvements.
+
+[View the CampusCare Technical Report](https://docs.google.com/document/d/1ymA9EUzVfyuLmSmLtJKzzUjvO3aRn1RsS5Wr67OdNlA/edit)
+
+### Application Demonstration
+
+A recorded demonstration showcases the application on an Android emulator, including the student reporting workflow, Firebase integration, and staff incident management.
+
+[Watch the CampusCare Demonstration](https://drive.google.com/file/d/1iuVJGtgHHGMtdwgQzaPfcumDLcGSY3jA/view?usp=sharing)
+
+---
+
+## Future Improvements
+
+Potential improvements include:
+
+- Push notifications for incident updates.
+- Department-based staff assignments.
+- Incident prioritization and escalation.
+- More granular access controls.
+- Authenticated Cloudinary uploads and asset deletion.
+- Expanded automated test coverage.
+- Additional physical-device and iOS testing.
+- Analytics for recurring campus infrastructure issues.
+
+---
+
+## Developer
+
+**Habibllah Ayodele**
+
+Software Engineering  
+African Leadership University
+
+GitHub: [sultanhabibllah](https://github.com/sultanhabibllah)
