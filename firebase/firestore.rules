@@ -1,0 +1,72 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function verified() { return signedIn() && request.auth.token.email_verified == true; }
+    // IMPORTANT: Replace alu.edu with the ACTUAL ALU student email domain before deployment.
+    function aluEmail() { return signedIn() && request.auth.token.email.matches('.*@alu\\.edu$'); }
+    function member() { return verified() && aluEmail(); }
+    function staff() { return member() && request.auth.token.staff == true; }
+
+    match /users/{uid} {
+      allow create: if signedIn() && aluEmail() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['firstName', 'lastName', 'email', 'createdAt'])
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.firstName is string
+        && request.resource.data.lastName is string;
+      allow read: if member() && (request.auth.uid == uid || staff());
+      allow update, delete: if false;
+    }
+
+    match /incidents/{id} {
+      allow read: if member();
+      allow create: if member()
+        && request.resource.data.keys().hasOnly([
+          'reporterId', 'reporterName', 'title', 'description',
+          'category', 'location', 'photoUrl', 'photoPath', 'status',
+          'createdAt', 'updatedAt', 'statusHistory'
+        ])
+        && request.resource.data.reporterId == request.auth.uid
+        && request.resource.data.status == 'Submitted'
+        && request.resource.data.statusHistory == []
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.title is string
+        && request.resource.data.title.size() >= 5
+        && request.resource.data.title.size() <= 80
+        && request.resource.data.description is string
+        && request.resource.data.description.size() >= 15
+        && request.resource.data.description.size() <= 1500
+        && request.resource.data.category in ['Facilities', 'Water', 'Electricity', 'Sanitation', 'Safety', 'Other']
+        && request.resource.data.location in ['Classrooms', 'Library', 'Cafeteria', 'Student Residence', 'Computer Lab', 'Reception', 'Outdoor Area', 'Other'];
+      allow update: if member() && (
+        (
+          resource.data.reporterId == request.auth.uid
+          && resource.data.status == 'Submitted'
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['title', 'description', 'category', 'location', 'updatedAt'])
+          && request.resource.data.title is string
+          && request.resource.data.title.size() >= 5
+          && request.resource.data.title.size() <= 80
+          && request.resource.data.description is string
+          && request.resource.data.description.size() >= 15
+          && request.resource.data.description.size() <= 1500
+          && request.resource.data.updatedAt == request.time
+        ) || (
+          staff()
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['status', 'updatedAt', 'statusHistory'])
+          && request.resource.data.status in ['Submitted', 'In Progress', 'Resolved']
+          && request.resource.data.status != resource.data.status
+          && request.resource.data.updatedAt == request.time
+          && request.resource.data.statusHistory is list
+          && request.resource.data.statusHistory.size() == resource.data.statusHistory.size() + 1
+          && request.resource.data.statusHistory[request.resource.data.statusHistory.size()-1].by == request.auth.uid
+          && request.resource.data.statusHistory[request.resource.data.statusHistory.size()-1].status == request.resource.data.status
+        )
+      );
+      allow delete: if member() && request.auth.uid == resource.data.reporterId
+        && resource.data.status == 'Submitted';
+    }
+  }
+}

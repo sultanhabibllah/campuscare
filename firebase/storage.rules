@@ -1,0 +1,19 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function member() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        // IMPORTANT: Change this to the actual ALU domain.
+        && request.auth.token.email.matches('.*@alu\\.edu$');
+    }
+    match /incident_photos/{uid}/{filename} {
+      allow read: if member();
+      allow create: if member() && request.auth.uid == uid
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow update: if false;
+      allow delete: if member() && (request.auth.uid == uid || request.auth.token.staff == true);
+    }
+  }
+}
