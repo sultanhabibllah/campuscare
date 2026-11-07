@@ -2,16 +2,14 @@
 class AppConstants {
   AppConstants._();
 
-  // Official ALU student email domain
+  // ALU student email domain
   static const String aluEmailDomain = 'alustudent.com';
 
   // Validate ALU student email addresses
   static bool validCampusEmail(String email) {
     final normalizedEmail = email.trim().toLowerCase();
 
-    return normalizedEmail.endsWith(
-      '@$aluEmailDomain',
-    );
+    return normalizedEmail.endsWith('@$aluEmailDomain');
   }
 
   // Incident categories
